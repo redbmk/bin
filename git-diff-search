@@ -1,0 +1,127 @@
+#!/usr/bin/perl -w
+
+use strict;
+
+sub usage
+{
+    die <<HERE;
+usage:
+    $0 <repo> <branch> <src> [max_commits]
+
+    repo        : path to the git repo
+
+    branch      : branch within the git repo
+
+    src         : path to the source directory
+
+    max_commits : maximum number of commits to search
+HERE
+}
+
+sub check_status
+{
+    die "command failed: $!\n" if $? == -1;
+}
+
+usage() unless @ARGV >= 3;
+my ($git_path, $branch, $src_path, $max_num_commits) = @ARGV;
+
+usage() unless -d $git_path && -d $src_path;
+my $git_dir = "--git-dir=$git_path/.git --work-tree=$git_path";
+
+`git $git_dir checkout -B tmp $branch`;
+check_status();
+
+my $limit = $max_num_commits ? "--max-count=$max_num_commits" : '';
+my @commits = split("\n", `git $git_dir log --oneline $limit HEAD`);
+check_status();
+
+sub get_diff_size
+{
+    my $hash = shift;
+
+    `git $git_dir reset --hard $hash`;
+    check_status();
+
+    my $size = `diff -burN -x.git $git_path $src_path | wc -l`;
+    chomp $size;
+    check_status();
+
+    return $size;
+}
+
+sub hash
+{
+    my $index  = shift;
+    my ($hash) = split /\s+/, $commits[$index];
+
+    return $hash;
+}
+
+my %sizes = ();
+sub size
+{
+    my $idx = shift;
+    my $val = shift;
+
+    my $hash = hash($idx);
+
+    $val = $sizes{$hash}        unless defined $val;
+    $val = get_diff_size($hash) unless defined $val;
+    
+    return $sizes{$hash} = $val;
+}
+
+sub min
+{
+    my $min = shift;
+    my $max = shift;
+
+    my $index = [ $min => $max ]->[ size($max) <= size($min) ];
+
+    return (size($index), $commits[$index]);
+}
+
+sub midpoint
+{
+    my ($min, $max) = @_;
+
+    my $mid = sprintf('%d', $min + (($max - $min) / 2));
+
+    return $mid;
+}
+
+my ($imin, $imax) = (0, $#commits);
+my ($best_size, $best_commit) = min($imin, $imax);
+
+sub print_best_commit
+{
+    print "Best commit found ($best_size lines changed): $best_commit\n";
+}
+
+sub main
+{
+    while ($imax >= $imin) {
+        my $imid = midpoint($imin, $imax);
+
+        if (size($imin) <= size($imax)) {
+            $imax = $imid - 1;
+            ($best_size, $best_commit) = min($imin, $imid);
+        } else {
+            $imin = $imid + 1;
+            ($best_size, $best_commit) = min($imax, $imid);
+        }
+        print_best_commit();
+    }
+}
+
+print_best_commit();
+eval { main(); };
+print_best_commit();
+
+`git $git_dir checkout $branch`;
+check_status();
+`git $git_dir branch -d tmp`;
+check_status();
+
+1;
