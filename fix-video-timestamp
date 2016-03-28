@@ -1,0 +1,13 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+
+for my $file (@ARGV) {
+  my $date = `exiftool "$file" | grep Original | cut -b35-`;
+  $date =~ s/:/-/ for 1 .. 2;
+  $date = substr $date, 0, -7;
+  `touch -d "$date" "$file"`;
+}
+
+1;
