@@ -6,7 +6,7 @@ Subjectively useful tools
   a set of video files. Google Photos does not (at the time of writing)
   use the original date for AVCHD (.MTS files) videos, and instead
   uses the modified date. Running this tool before uploading a video
-  will give it the correct timestamp. *example usage*: `fix-video-timestamp /path/to/files/\*.MTS`.
+  will give it the correct timestamp. *example usage*: `fix-video-timestamp /path/to/files/*.MTS`.
 
 **git-diff-search** *(perl)*:
     Given some source code and a git repository, uses a binary search
