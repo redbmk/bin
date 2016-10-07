@@ -1,0 +1,19 @@
+#!/bin/bash
+ip route show
+cmd="iwlist wlp1s0 scan"
+sudo -nv &> /dev/null
+if [ $? -eq 0 ]; then
+  cmd="sudo $cmd"
+else
+  echo ""
+  read -p "sudo is recommended to scan wireless networks. Run with sudo? [N/y]" yn
+  case $yn in
+    [Yy]* )
+      cmd="sudo $cmd";
+      sudo -v
+  esac
+fi
+echo ""
+echo "Scanning wireless networks to find least congested signal..."
+echo "Channels 1, 6, and 11 don't overlap with each other and are supported by all US devices"
+$cmd | grep \(Channel | sort

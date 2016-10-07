@@ -1,0 +1,2 @@
+#!/bin/bash
+python -mjson.tool $1 | less +Gg
