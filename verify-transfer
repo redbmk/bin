@@ -41,7 +41,7 @@ function splitLocation(location = '') {
 function spawn(server, dir, cmd) {
   let args, opts = {};
   if (server) {
-    args = [ server, `cd ${dir} && ${cmd.replace(';', '\\;')}` ];
+    args = [ server, `cd "${dir}" && ${cmd.replace(';', '\\;')}` ];
     cmd = 'ssh';
   } else {
     args = cmd.split(' ');
