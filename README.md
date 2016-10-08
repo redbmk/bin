@@ -38,3 +38,11 @@ Subjectively useful tools
   compares them to make sure they are the same. Works with local or remote
   folders.
   *example usage*: `verify-transfer myusername@example.com:/backup/Photos ~/local/Photos`
+
+Installation
+============
+
+For most tools, simply add the folder to your `PATH` environment variable. The
+following tools require extra installation steps:
+
+* **verify-transfer**: `npm install`.

@@ -1,0 +1,23 @@
+{
+  "name": "bin",
+  "version": "1.0.0",
+  "description": "Subjectively useful tools",
+  "main": "",
+  "dependencies": {
+    "progress": "^1.1.8"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/redbmk/bin.git"
+  },
+  "author": "Braden Kelley",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/redbmk/bin/issues"
+  },
+  "homepage": "https://github.com/redbmk/bin#readme"
+}

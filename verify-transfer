@@ -11,7 +11,8 @@ if (!dir1 || !dir2) {
   usage(1);
 }
 
-const spawn = require('child_process').spawn;
+const childProcess = require('child_process');
+const ProgressBar = require('progress');
 
 main();
 
@@ -37,23 +38,38 @@ function splitLocation(location = '') {
   return location.split(/:(.+)/);
 }
 
-function fetchHashes(server, dir) {
+function spawn(server, dir, cmd) {
+  let args, opts = {};
+  if (server) {
+    args = [ server, `cd ${dir} && ${cmd.replace(';', '\\;')}` ];
+    cmd = 'ssh';
+  } else {
+    args = cmd.split(' ');
+    cmd = args.shift();
+    opts.cwd = dir;
+  }
+
+  return childProcess.spawn(cmd, args, opts);
+}
+
+function fetchNumFiles(server, dir) {
   return new Promise((resolve, reject) => {
+    let child = spawn(server, dir, 'find . -type f');
 
-    let cmd = `find . -type f -exec md5sum {} ;`;
+    let numFiles = 0;
+    child.on('error', error => reject(error));
+    child.stdout.on('data', data => {
+      numFiles += `${data}`.split(/\n/).filter(line => line).length;
+    });
 
-    let args, opts = {};
-    if (server) {
-      args = [ server, `cd ${dir} && ${cmd.replace(';', '\\;')}` ];
-      cmd = 'ssh';
-    } else {
-      args = cmd.split(' ');
-      cmd = args.shift();
-      opts.cwd = dir;
-    }
+    child.on('close', () => resolve(numFiles));
+  });
+}
 
+function fetchHashes(server, dir, progress) {
+  return new Promise((resolve, reject) => {
     let hashes = {};
-    let child = spawn(cmd, args, opts);
+    let child = spawn(server, dir, 'find . -type f -exec md5sum {} ;');
 
     child.on('error', error => reject(error));
     child.stdout.on('data', data => {
@@ -61,6 +77,7 @@ function fetchHashes(server, dir) {
       for (let line of lines) {
         let [ hash, filename ] = line.split(/ +(.+)/);
         if (filename) {
+          progress.tick(1);
           hashes[filename.substr(2)] = hash;
         }
       }
@@ -89,14 +106,28 @@ function hashDiff([ left, right ]) {
   );
 }
 
+function forBoth(fn, ...extraArgs) {
+  return Promise.all([
+    fn(server1, dir1, ...extraArgs),
+    fn(server2, dir2, ...extraArgs),
+  ]);
+}
+
 function main() {
-  console.log('Calculating hashes...');
-  Promise.all([
-    fetchHashes(server1, dir1),
-    fetchHashes(server2, dir2)
-  ])
+  console.log('Scanning for files...');
+  forBoth(fetchNumFiles)
+  .then(numFiles => {
+    return new ProgressBar('Calculating hashes (:bar) :percent :etas', {
+      complete: '.',
+      incomplete: ' ',
+      width: 20,
+      total: numFiles.reduce((sum, num) => sum + num, 0)
+    });
+  })
+  .then(progress => forBoth(fetchHashes, progress))
   .then(hashDiff)
   .then(differences => {
+    console.log(); // Ensure progress bar has a newline
     if (differences.length) {
       console.log(`Found ${differences.length} differences:`);
       for (let filename of differences) {
