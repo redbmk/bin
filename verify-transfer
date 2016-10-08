@@ -32,6 +32,7 @@ Usage: ${process.argv[1]} <location1> <location2>
 }
 
 function splitLocation(location = '') {
+  location = location.replace(/ /g, '\\ ');
   if (!~location.indexOf(':')) {
     return [ '', location ] ;
   }
@@ -41,7 +42,7 @@ function splitLocation(location = '') {
 function spawn(server, dir, cmd) {
   let args, opts = {};
   if (server) {
-    args = [ server, `cd "${dir}" && ${cmd.replace(';', '\\;')}` ];
+    args = [ server, `cd ${dir} && ${cmd.replace(';', '\\;')}` ];
     cmd = 'ssh';
   } else {
     args = cmd.split(' ');
@@ -58,6 +59,7 @@ function fetchNumFiles(server, dir) {
 
     let numFiles = 0;
     child.on('error', error => reject(error));
+    child.stderr.on('data', error => reject(`Cannot find directory ${server}:${dir}\n${error}`));
     child.stdout.on('data', data => {
       numFiles += `${data}`.split(/\n/).filter(line => line).length;
     });
@@ -130,8 +132,8 @@ function main() {
     console.log(); // Ensure progress bar has a newline
     if (differences.length) {
       console.log(`Found ${differences.length} differences:`);
-      for (let filename of differences) {
-        console.log(filename);
+      for (let difference of differences) {
+        console.log(difference);
       }
       process.exit(1);
     } else {
@@ -140,7 +142,7 @@ function main() {
     }
   })
   .catch(error => {
-    console.log(error.stack);
+    console.log(error.stack || error);
     process.exit(1);
   });
 }
