@@ -33,7 +33,8 @@ Subjectively useful tools
 
 **update-certs** *(bash)*:
     Script to dynamically add and update nginx configs and renew letsencrypt
-  certifications. Can be run on a daily cron to keep certs up to date.
+  certifications. Can be run on a daily cron to keep certs up to date. A
+  walkthrough of the usage can be found [on the wiki](https://github.com/redbmk/bin/wiki/update-certs).
 
 **verify-transfer** *(node)*:
     After transfering some files (e.g. with rsync) you can use this to
