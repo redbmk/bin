@@ -1,0 +1,49 @@
+#!/bin/bash
+base_dir=${BASE_DIR:-~/websites};
+access_log=${ACCESS_LOG:-BASE_DIR/DOMAIN/SUBDOMAIN/access.log};
+error_log=${ERROR_LOG:-BASE_DIR/DOMAIN/SUBDOMAIN/error.log};
+nginx_template=${NGINX_TEMPLATE:-${BASH_SOURCE%/*}/.template.nginx.conf};
+default_directives_template=${DIRECTIVES_TEMPLATE:-${BASH_SOURCE%/*}/.template.directives.nginx.conf};
+
+if [ ! -f "$nginx_template" ] || [ ! -f "$default_directives_template" ]; then
+  echo "Error reading templates!"
+  echo "By default they are in the same location as the script."
+  echo "Try overriding them with environment variables NGINX_TEMPLATE and DIRECTIVES_TEMPLATE."
+  exit 1;
+fi
+
+for D in $base_dir/*/*; do
+  if [ -d "$D" ]; then
+    domain=$(basename $(dirname "$D"))
+    subdomain=$(basename "$D")
+
+    certbot_cmd="/opt/certbot/certbot-auto certonly -n -q"
+    certbot_cmd="$certbot_cmd -a webroot --webroot-path=/var/www"
+    certbot_cmd="$certbot_cmd -d $subdomain.$domain"
+
+    directives_template="$base_dir/$domain/$subdomain/directives.nginx.conf";
+    [[ -f "$directives_template" ]] || directives_template="$default_directives_template"
+
+    directives=$(cat "$directives_template" | sed -e ':a;N;$!ba;s/\n/\\\n  /g' -e 's/#/\\#/g');
+
+    config=$(cat "$nginx_template" | \
+      sed -e "s#ACCESS_LOG#$access_log#g" \
+          -e "s#ERROR_LOG#$error_log#g" \
+          -e "s#BASE_DIR#$base_dir#g" \
+          -e "s#SUBDOMAIN#$subdomain#g" \
+          -e "s#DOMAIN#$domain#g" \
+          -e "s#DIRECTIVES#$directives#g" \
+    );
+
+    if [ "www" = "$subdomain" ]; then
+      certbot_cmd="$certbot_cmd -d $domain"
+      config=$(echo "$config" | sed -e "s/server_name /server_name $domain /g");
+      config=$(echo "$config" | sed -e "s#live/www.#live/#g");
+    fi
+
+    $certbot_cmd;
+    echo "$config" > "$base_dir/$domain/$subdomain/nginx.conf";
+  fi
+done
+
+sudo nginx -s reload

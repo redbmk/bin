@@ -31,6 +31,10 @@ Subjectively useful tools
   pipe in some data. *example usage*: `jsonlint data.json`
   or `curl -s1 example.com/data.json | jsonlint`.
 
+**update-certs** *(bash)*:
+    Script to dynamically add and update nginx configs and renew letsencrypt
+  certifications. Can be run on a daily cron to keep certs up to date.
+
 **verify-transfer** *(node)*:
     After transfering some files (e.g. with rsync) you can use this to
   verify that all the files are the same. It takes a while for large folders
