@@ -31,6 +31,13 @@ Subjectively useful tools
   pipe in some data. *example usage*: `jsonlint data.json`
   or `curl -s1 example.com/data.json | jsonlint`.
 
+**tether** *(bash)*:
+    Turns on USB tethering if your android phone is connected in debug mode and unlocked.
+  Takes no params. There are instructions in the comments to add to `udev` so that
+  this will happen automatically when you connect your device, if you wish (make sure
+  you unlock your phone before plugging it in). Not guaranteed to work on all android phones,
+  but does not require root.
+
 **update-certs** *(bash)*:
     Script to dynamically add and update nginx configs and renew letsencrypt
   certifications. Can be run on a daily cron to keep certs up to date. A

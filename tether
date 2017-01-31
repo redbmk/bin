@@ -1,0 +1,25 @@
+#!/bin/bash
+
+openTether="am start -n com.android.settings/.TetherSettings"
+pause="sleep 1"
+inputKey="input keyevent KEYCODE_"
+
+function log {
+  echo "$1" >> /tmp/tether.log
+}
+
+date=`date`
+output=`adb shell "$openTether; $pause; ${inputKey}DPAD_UP; $pause; ${inputKey}ENTER" 2>&1`
+
+
+log
+log "[$date]"
+log "$output"
+
+# put the following line in /etc/udev/rules.d/tether.rules
+# ACTION=="add" ATTRS{idVendor}=="dead", ATTRS{idProduct}=="beef", RUN+="/path/to/tether"
+#
+# You can get the vendor:product id when the device is in debug (non-tethering) mode
+# by running `lsusb`. You'll get some output with a line like:
+#
+# Bus 001 Device 044: ID dead:beef Google Inc. Nexus 4 (debug)
