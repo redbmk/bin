@@ -1,6 +1,6 @@
 #!/bin/bash
 ip route show
-cmd="iwlist wlp1s0 scan"
+cmd="iwlist $(ifconfig | grep -Po '^w\w+') scan"
 sudo -nv &> /dev/null
 if [ $? -eq 0 ]; then
   cmd="sudo $cmd"
