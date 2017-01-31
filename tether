@@ -11,13 +11,14 @@ function log {
 date=`date`
 output=`adb shell "$openTether; $pause; ${inputKey}DPAD_UP; $pause; ${inputKey}ENTER" 2>&1`
 
-
 log
 log "[$date]"
 log "$output"
 
-# put the following line in /etc/udev/rules.d/tether.rules
-# ACTION=="add" ATTRS{idVendor}=="dead", ATTRS{idProduct}=="beef", RUN+="/path/to/tether"
+# To run this script every time you connect your device,
+# put the following line in e.g. /etc/udev/rules.d/tether.rules
+#
+# ACTION=="add", ATTRS{idVendor}=="dead", ATTRS{idProduct}=="beef", RUN+="/path/to/tether"
 #
 # You can get the vendor:product id when the device is in debug (non-tethering) mode
 # by running `lsusb`. You'll get some output with a line like:
