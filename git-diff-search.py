@@ -8,7 +8,7 @@ It is provided without warranty under the terms of the GNU General Public Licens
 Copyright 2015 Yves Delley
 """
 
-import os
+import os, sys
 import subprocess
 
 import traits.api as tr
